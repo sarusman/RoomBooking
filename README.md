@@ -10,7 +10,10 @@ gRPC et le frontend seront ajoutés dans les étapes suivantes.
 ## Fichiers
 
 ```text
-main.py                 API et données de démonstration
+main.py                 Point d'entrée : création de l'application
+models/room.py          Modèles, validation et stockage des salles
+controllers/room_controller.py  Routes HTTP et gestion des erreurs
+views/room_view.py      Format des réponses JSON
 requirements.txt        Dépendances de l'application
 requirements-dev.txt    Dépendances pour les tests
 Dockerfile              Construction de l'image
@@ -19,6 +22,22 @@ k8s/service.yaml        Accès au service sur le port 8000 (NodePort 30080)
 tests/test_rooms.py      Tests de l'API
 repo_prof/              Exemples du professeur, ignorés par Git et Docker
 ```
+
+## Architecture MVC
+
+- **Modèle** (`models/`) : définit une salle, valide ses données et gère les
+  opérations de lecture, ajout, modification et suppression en mémoire.
+- **Vue** (`views/`) : définit les champs renvoyés au client en JSON avec
+  `RoomView`. FastAPI utilise cette vue via `response_model` pour produire les
+  réponses. Pour cette API REST, la vue est une représentation JSON ; le
+  frontend graphique reste une étape ultérieure.
+- **Contrôleur** (`controllers/`) : reçoit les requêtes HTTP, appelle le modèle,
+  choisit la vue et transforme une salle inexistante en réponse HTTP `404`.
+
+Exemple : `GET /rooms/1` arrive dans le contrôleur, qui demande la salle au
+modèle. FastAPI présente ensuite cette salle en JSON selon `RoomView`.
+`main.py` assemble l'application et ses routes. Les fichiers `k8s/` restent
+la configuration de déploiement, en dehors du MVC.
 
 ## 1. Lancer en Python
 
@@ -164,13 +183,17 @@ python -m unittest discover -s tests -v
 Les tests vérifient le cycle ajout/lecture/modification/suppression, les filtres,
 les salles inexistantes et le rejet des données invalides.
 
-Vérifications réalisées le 24 novembre 2026 :
+Vérifications de la première version publiée (`1.0`), le 24 novembre 2026 :
 
 - Les 7 tests automatisés passent.
 - L'image Docker est construite et les opérations CRUD sont testées via HTTP.
 - L'image `sarusman/roombooking-room-service:1.0` est publiée dans un dépôt public.
 - Minikube télécharge cette image depuis Docker Hub ; le Pod est `1/1 Running`.
 - Les opérations CRUD fonctionnent via le Service et le NodePort répond sur `/health`.
+
+La réorganisation MVC est vérifiée séparément avec les 7 tests de l'API et
+une construction Docker locale (`roombooking-room-service:mvc`). La version
+MVC n'a pas encore été publiée sur Docker Hub ni redéployée dans Minikube.
 
 ## Limites de cette étape
 

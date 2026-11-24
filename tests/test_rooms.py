@@ -3,18 +3,19 @@ import unittest
 from fastapi.testclient import TestClient
 
 import main
+from models import room as room_model
 
 
 class RoomServiceTests(unittest.TestCase):
     def setUp(self):
-        self.original_rooms = main.rooms.copy()
-        self.original_next_id = main.next_id
+        self.original_rooms = room_model.rooms.copy()
+        self.original_next_id = room_model.next_id
         self.client = TestClient(main.app)
 
     def tearDown(self):
         self.client.close()
-        main.rooms = self.original_rooms
-        main.next_id = self.original_next_id
+        room_model.rooms = self.original_rooms
+        room_model.next_id = self.original_next_id
 
     def test_health_and_documentation(self):
         self.assertEqual(self.client.get("/health").json(), {"status": "ok"})
